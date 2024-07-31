@@ -990,11 +990,11 @@ sap.ui.define([
 					var reservedCount = 0;
 
 					oData.results.forEach(function (oPlot) {
-						if (oPlot.status === "Empty") {
+						if (oPlot.available === "Empty") {
 							emptyCount++;
-						} else if (oPlot.status === "Not Empty") {
+						} else if (oPlot.available === "Not Empty") {
 							notEmptyCount++;
-						} else if (oPlot.status === "Reserved") {
+						} else if (oPlot.available === "Reserved") {
 							reservedCount++;
 						}
 
@@ -1009,11 +1009,14 @@ sap.ui.define([
 								}),
 								new sap.m.Text({
 									text: oPlot.inBoundOroutBound
+								}),
+								new sap.m.Text({
+									text: oPlot.available
 								})
 							]
 						}).addStyleClass(
-							oPlot.status === "Empty" ? "greenBackground" :
-								oPlot.status === "Not Empty" ? "redBackground" :
+							oPlot.available === "Empty" ? "greenBackground" :
+								oPlot.available === "Not Empty" ? "redBackground" :
 									"yellowBackground" // Reserved
 						)
 
