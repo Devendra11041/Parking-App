@@ -1038,40 +1038,61 @@ sap.ui.define([
 		//Generating the print form
 		triggerPrintForm: function (vehicalDeatils) {
 			// Create a temporary print area
-			debugger
 			var printWindow = window.open('', '', 'height=500,width=800');
 			printWindow.document.write('<html><head><title>Parking Lot Allocation</title>');
-			printWindow.document.write('<style>body{font-family: Arial, sans-serif;} table{width: 100%; border-collapse: collapse;} td, th{border: 1px solid #ddd; padding: 8px;} th{padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #4CAF50; color: white;}</style>');
+			printWindow.document.write('<style>');
+			printWindow.document.write('body{font-family: Arial, sans-serif;}');
+			printWindow.document.write('.container { display: flex; justify-content: center; margin-top: 20px; }');
+			printWindow.document.write('table{width: 100%; max-width: 600px; border-collapse: collapse;}');
+			printWindow.document.write('td, th{border: 1px solid #ddd; padding: 8px;}');
+			printWindow.document.write('th{padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #4CAF50; color: white;}');
+			printWindow.document.write('.highlight { font-weight: bold; background-color: #f0f0f0; }');
+			printWindow.document.write('</style>');
 			printWindow.document.write('</head><body>');
+		
 			printWindow.document.write('<h2>Parking Lot Allocation</h2>');
+		
+			// Container for table
+			printWindow.document.write('<div class="container">');
 			printWindow.document.write('<table><tr><th>Field</th><th>Value</th></tr>');
-			printWindow.document.write('<tr><td>Vehicle Number</td><td>' + vehicalDeatils.vehicalNo + '</td></tr>');
+			printWindow.document.write('<tr><td class="highlight">Vehicle Number</td><td class="highlight">' + vehicalDeatils.vehicalNo + '</td></tr>');
 			printWindow.document.write('<tr><td>Driver Name</td><td>' + vehicalDeatils.driverName + '</td></tr>');
 			printWindow.document.write('<tr><td>Phone</td><td>' + vehicalDeatils.phone + '</td></tr>');
 			printWindow.document.write('<tr><td>Vehicle Type</td><td>' + vehicalDeatils.vehicalType + '</td></tr>');
-			printWindow.document.write('<tr><td>Plot Number</td><td>' + vehicalDeatils.plotNo_plot_NO + '</td></tr>');
+			printWindow.document.write('<tr><td class="highlight">Plot Number</td><td class="highlight">' + vehicalDeatils.plotNo_plot_NO + '</td></tr>');
 			printWindow.document.write('<tr><td>Assigned Date</td><td>' + vehicalDeatils.assignedDate + '</td></tr>');
-
+		
 			// Generate barcode
-			debugger
 			const barcodeValue = `${vehicalDeatils.vehicalNo}`;
 			const canvas = document.createElement('canvas');
-			JsBarcode(canvas, barcodeValue, {
-				format: "CODE128",
-				lineColor: "#0aa",
-				width: 4,
-				height: 40,
-				displayValue: true
+			
+			// Use a Promise to ensure the barcode is generated before printing
+			new Promise((resolve, reject) => {
+				JsBarcode(canvas, barcodeValue, {
+					format: "CODE128",
+					lineColor: "#0aa",
+					width: 4,
+					height: 40,
+					displayValue: true
+				});
+				resolve(canvas.toDataURL("image/png"));
+			}).then(barcodeImage => {
+				// Add barcode to print
+				printWindow.document.write('<tr><td>Barcode</td><td><img src="' + barcodeImage + '" alt="Barcode"></td></tr>');
+				printWindow.document.write('</table>');
+				printWindow.document.write('</div>'); // Close container
+		
+				printWindow.document.write('</body></html>');
+				printWindow.document.close();
+		
+				// Delay the print to ensure the document is fully loaded
+				printWindow.onload = function () {
+					printWindow.print();
+				};
+			}).catch(error => {
+				console.error("Barcode generation error: ", error);
 			});
-			const barcodeImage = canvas.toDataURL("image/png");
-
-			// Add barcode to print
-			printWindow.document.write('<tr><td>Barcode</td><td><img src="' + barcodeImage + '" alt="Barcode"></td></tr>');
-			printWindow.document.write('</table>');
-			printWindow.document.write('</body></html>');
-			printWindow.document.close();
-			printWindow.print();
-		},
+		},		
 		onModel: async function () {
 			var oModel = this.getView().getModel("ModelV2");
 			var that = this;
