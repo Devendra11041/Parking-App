@@ -82,12 +82,17 @@ sap.ui.define([
 		onExit: function () {
 			Device.media.detachHandler(this._handleMediaChange, this);
 		},
-		// statusTextFormatter: function (bStatus) {
-		// 	return bStatus ? "Empty" : "Not Empty"; // Modify as per your requirement
-		// },
-
-		//
+        
+		//Value help fragment opening function 
 		onValueHelpRequest: function (oEvent) {
+			var oView = this.getView();
+ 
+            // Get the Select control
+            var oSelect = oView.byId("idselectvt");
+ 
+            // Alternatively, get the selected item and its text
+            var oSelectedItem = oSelect.getSelectedItem();
+            var sSelectedText = oSelectedItem ? oSelectedItem.getText() : null;
 			var sInputValue = oEvent.getSource().getValue(),
 				oView = this.getView();
 
@@ -104,7 +109,7 @@ sap.ui.define([
 			this._pValueHelpDialog.then(function (oDialog) {
 				// Create a filter for the binding
 				oDialog.setModel(this.getView().getModel("ModelV2"));
-				oDialog.getBinding("items").filter([new Filter("plot_NO", sap.ui.model.FilterOperator.Contains, sInputValue)]);
+				oDialog.getBinding("items").filter([new Filter("inBoundOroutBound", sap.ui.model.FilterOperator.EQ,sSelectedText)]);
 				// Open ValueHelpDialog filtered by the input's value
 				oDialog.open(sInputValue);
 			}.bind(this));
@@ -178,10 +183,18 @@ sap.ui.define([
 				return;
 			};
 			var oplotnoexists = await this.plotnoexists(oModel, plotNo)
+
 			if (!oplotnoexists) {
 				MessageToast.show("Please Select Valid Plotn No")
 				return
-			}
+			};
+			var plotAssigned = await this.checkIfExists(oModel, "/VehicalDeatils", "plotNo_plot_NO", oPayload.VehicalDeatils.plotNo_plot_NO);
+       
+            if (plotAssigned) {
+                MessageToast.show(" plot Number or Phone number already assigned ");
+                return;
+            };
+		
 
 			try {
 				// Assuming createData method sends a POST request
@@ -232,10 +245,10 @@ sap.ui.define([
 						var utterance = new SpeechSynthesisUtterance(message);
 
 						// Set properties (optional)
-						utterance.pitch = 1; // Range between 0 (lowest) and 2 (highest)
-						utterance.rate = 0.75;  // Range between 0.1 (lowest) and 10 (highest)
-						utterance.volume = 1; // Range between 0 (lowest) and 1 (highest)
-						utterance.lang = lang; // Set the language
+						utterance.pitch = 1; 
+						utterance.rate = 0.75;  
+						utterance.volume = 1; 
+						utterance.lang = lang; 
 
 						// Speak the utterance
 						debugger
@@ -258,8 +271,8 @@ sap.ui.define([
 				);
 
 				const updatedParkingLot = {
-					available: "Not Empty" // Assuming false represents empty parking
-					// Add other properties if needed
+					available: "Not Empty" 
+					
 				};
 				oModel.update("/PlotNOs('" + plotNo + "')", updatedParkingLot, {
 					success: function () {
@@ -310,6 +323,19 @@ sap.ui.define([
 				});
 			});
 		},
+		checkIfExists: async function (oModel, sEntitySet, sProperty, sValue) {
+            return new Promise((resolve, reject) => {
+                oModel.read(sEntitySet, {
+                    filters: [new sap.ui.model.Filter(sProperty, sap.ui.model.FilterOperator.EQ, sValue)],
+                    success: (oData) => {
+                        resolve(oData.results.length > 0);
+                    },
+                    error: (oError) => {
+                        reject(oError);
+                    }
+                });
+            });
+        },
 		//Validation for plot checking
 		plotnoexists: async function (oModel, splotNo) {
 			return new Promise((resolve, reject) => {
@@ -347,7 +373,7 @@ sap.ui.define([
 			return new Promise((resolve, reject) => {
 				oModel.read("/VehicalDeatils", {
 					filters: [
-						new Filter("vehicalNo", FilterOperator.EQ, sVehicalNo),
+						new Filter("plotNo_plot_NO", FilterOperator.EQ, sVehicalNo),
 
 					],
 					success: function (oData) {
@@ -433,7 +459,7 @@ sap.ui.define([
 
 				const updatedParkingLot = {
 					available: "Empty" // Assuming false represents empty parking
-					// Add other properties if needed
+					
 				};
 				oModel.update("/PlotNOs('" + plotNo + "')", updatedParkingLot, {
 					success: function () {
@@ -446,41 +472,6 @@ sap.ui.define([
 				this.onclearvalues();
 			} catch (error) {
 				sap.m.MessageBox.error("Some technical Issue");
-			}
-		},
-		//Print function
-		OnPrintpress: async function () {
-			debugger
-			var oSelected = this.byId("AssignedSlotsTable").getSelectedItems();
-			if (oSelected.length === 0) {
-				MessageBox.error("Please Select atleast one Book to Edit");
-				return
-			};
-
-			var oSelect = oSelected[0]
-			if (oSelect) {
-				var ovehicalNo = oSelect.getBindingContext().getProperty("vehicalNo");
-				var odriverName = oSelect.getBindingContext().getProperty("driverName");
-				var ophone = oSelect.getBindingContext().getProperty("phone");
-				var ovehicalType = oSelect.getBindingContext().getProperty("vehicalType");
-				var oassignedDate = oSelect.getBindingContext().getProperty("assignedDate");
-				var oplotNo = oSelect.getBindingContext().getProperty("plotNo");
-			};
-			if (!this.oprint) {
-				this.oprint = await Fragment.load({
-					id: this.getView().getId(),
-					name: "com.app.parkinglot.fragment.print",
-					controller: this
-				});
-				this.getView().addDependent(this.oprint);
-			}
-
-			this.oprint.open();
-		},
-		onCloseDialog: function () {
-			var oDialog = this.byId("idprintparking");
-			if (oDialog) {
-				oDialog.close();
 			}
 		},
 		//vehicel submission details are alredy in 
@@ -561,11 +552,11 @@ sap.ui.define([
 			var oButton = oEvent.getSource();
 			var sButtonText = oButton.getText();
 
-			var oRow = oButton.getParent(); // Get the table row
-			var oCell = oRow.getCells()[4]; // Assuming the 5th cell contains both Text and ComboBox
+			var oRow = oButton.getParent(); 
+			var oCell = oRow.getCells()[4]; 
 
-			var oText = oCell.getItems()[0]; // Assuming the first item is Text
-			var oComboBox = oCell.getItems()[1]; // Assuming the second item is ComboBox
+			var oText = oCell.getItems()[0]; 
+			var oComboBox = oCell.getItems()[1];
 
 			if (sButtonText === "Edit") {
 				// Switching to edit mode
@@ -680,8 +671,8 @@ sap.ui.define([
 				await this.createData(oModel, oPayload, "/Reservation");
 
 				const updatedParkingLot = {
-					available: "Reserved" // Assuming false represents empty parking
-					// Add other properties if needed
+					available: "Reserved" 
+					
 				};
 
 				oModel.update("/PlotNOs('" + sParkingLot + "')", updatedParkingLot, {
@@ -700,7 +691,7 @@ sap.ui.define([
 			} this.onclearreservations();
 		},
 
-		// Function to check if vehicle number exists in backend
+		
 		// Function to check if vehicle number exists in backend
 		plotnovalidation: async function (oModel, splotNo) {
 			return new Promise((resolve, reject) => {
@@ -876,7 +867,8 @@ sap.ui.define([
 			});
 		},
 		_setHistoryModel: function () {
-			debugger
+			
+			
 			var oModel = this.getOwnerComponent().getModel("ModelV2");
 			var that = this;
 
@@ -898,7 +890,7 @@ sap.ui.define([
 		},
 
 		_processHistoryData: function (aItems) {
-			debugger
+			
 			var oData = {};
 
 			aItems.forEach(function (item) {
@@ -982,7 +974,7 @@ sap.ui.define([
 		loadParkingLots: function () {
 			var oModel = this.getOwnerComponent().getModel("ModelV2");
 			var oParkingLotContainer = this.byId("parkingLotContainer");
-
+			const that = this;
 			oModel.read("/PlotNOs", {
 				success: function (oData) {
 					var emptyCount = 0;
@@ -1010,9 +1002,16 @@ sap.ui.define([
 								new sap.m.Text({
 									text: oPlot.inBoundOroutBound
 								}),
-								new sap.m.Text({
-									text: oPlot.available
+								new sap.m.Link({
+									text: oPlot.available,
+									press: () => {
+										that._handleLinkPress(oPlot.plot_NO);
+									},
+									enabled: oPlot.available == 'Empty'? false:true
 								})
+								// new sap.m.Text({
+								// 	text: VehicalDeatils.vehicalNo
+								// })
 							]
 						}).addStyleClass(
 							oPlot.available === "Empty" ? "greenBackground" :
@@ -1034,7 +1033,80 @@ sap.ui.define([
 			});
 		},
 
+		_handleLinkPress: function (plotNum) {
+			var oModel = this.getOwnerComponent().getModel("ModelV2");
+			var oView = this.getView();
+		
+			// Fetch vehicle details associated with the plot number
+			oModel.read("/VehicalDeatils", {
+				filters: [
+					new sap.ui.model.Filter("plotNo_plot_NO", sap.ui.model.FilterOperator.EQ, plotNum)
+				],
+				success: function (oData) {
+					console.log(oData); // Debug: Check the data returned
+		
+					if (oData.results.length > 0) {
+						var vehicle = oData.results[0]; // Assuming plot number is unique and only one vehicle is associated
+		
+						// Load the dialog fragment if it doesn't already exist
+						if (!this._pVehicleDetailsDialog) {
+							this._pVehicleDetailsDialog = Fragment.load({
+								id: oView.getId(),
+								name: "com.app.parkinglot.fragment.data",
+								controller: this
+							}).then(function (oDialog) {
+								oView.addDependent(oDialog);
+								return oDialog;
+							});
+						}
+		
+						this._pVehicleDetailsDialog.then(function (oDialog) {
+							// Create content dynamically
+							var oVBox = oView.byId("dialogContentContainer");
+							oVBox.removeAllItems();
+		
+							var createLabelValueHBox = function (labelText, valueText) {
+								return new sap.m.HBox({
+									alignItems: "Center",
+									justifyContent: "Start",
+									items: [
+										new sap.m.Text({
+											text: labelText,
+											wrapping: false,
+											class: "vehicleDetailsLabel"
+										}),
+										new sap.m.Text({
+											text: valueText,
+											wrapping: false,
+											class: "vehicleDetailsValue"
+										})
+									]
+								});
+							};
+		
+							oVBox.addItem(createLabelValueHBox("Vehicle Number:", vehicle.vehicalNo));
+							oVBox.addItem(createLabelValueHBox("Driver Name:", vehicle.driverName));
+							oVBox.addItem(createLabelValueHBox("Phone:", vehicle.phone));
+							oVBox.addItem(createLabelValueHBox("Vehicle Type:", vehicle.vehicalType));
+							oVBox.addItem(createLabelValueHBox("Assigned Date:", new Date(vehicle.assignedDate).toLocaleDateString()));
 
+							oDialog.open();
+						});
+					} else {
+						sap.m.MessageToast.show("No vehicle details found for the selected plot.");
+					}
+				}.bind(this),
+				error: function (oError) {
+					sap.m.MessageToast.show("Error fetching vehicle details: " + oError.message);
+					console.error(oError); // Debug: Log error details
+				}
+			});
+		},
+		
+		onCloseDialogPress: function () {
+			this.byId("vehicleDetailsDialog").close();
+		}
+		,
 		//Generating the print form
 		triggerPrintForm: function (vehicalDeatils) {
 			// Create a temporary print area
@@ -1092,7 +1164,7 @@ sap.ui.define([
 			}).catch(error => {
 				console.error("Barcode generation error: ", error);
 			});
-		},		
+		},
 		onModel: async function () {
 			var oModel = this.getView().getModel("ModelV2");
 			var that = this;

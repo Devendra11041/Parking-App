@@ -223,3 +223,40 @@
     gap: 1rem;
     box-sizing: border-box;
 }
+
+.dataclasszero{
+    background-color: aqua;
+}
+
+.vehicleDetailsContainer {
+    padding: 15px;
+    background-color: #f4bfbf;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+.vehicleDetailsBox {
+    background-color: #ffffff;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+    color:yellowgreen
+}
+
+.vehicleDetailsLabel {
+    color: #007acc; 
+    font-weight: bold; 
+    margin-right: 10px; 
+}
+
+.vehicleDetailsValue {
+    color: #333; 
+}
+
+.vehicleDetailsBox {
+    padding: 10px;
+}
+
+.classscanner{
+    margin-left: 20px;
+}

@@ -206,12 +206,6 @@
                                         text="PARKING LOT ALLOCATION"
                                         class="Reserveheading"
                                     />
-                                    <Button
-                                        id="idbuttonscanner"
-                                        class="classscanner"
-                                        icon="sap-icon://bar-code"
-                                        press="onScannrPress"
-                                    />
                                 </HBox>
                                 <VBox id="ReserveVboxmpt">
                                     <Label
@@ -265,12 +259,12 @@
                                         class="classinputmptc"
                                         width="100%"
                                     >
-                                        <core:Item
+                                        <core:ListItem
                                             id="iditemsee"
                                             key="inward"
                                             text="inward"
                                         />
-                                        <core:Item
+                                        <core:ListItem
                                             id="itemsdd"
                                             key="outward"
                                             text="outward"
@@ -329,6 +323,13 @@
                                             type="Reject"
                                             class="classbtnasign"
                                         />
+                                        <Button
+                                            id="idbuttonscanner"
+                                            class="classscanner"
+                                            icon="sap-icon://bar-code"
+                                            press="onScannrPress"
+                                            text="Scanner"
+                                        />
                                     </HBox>
                                 </VBox>
                             </f:SimpleForm>
@@ -352,7 +353,6 @@
                                 text="Parking Lot Status"
                                 class="sapUiMediumMarginBottom"
                                 wrapping="false"
-                                design="H2"
                             />
                             <HBox
                                 id="iuhjn"
@@ -370,6 +370,7 @@
                                         class="sapUiTinyMarginEnd"
                                     />
                                     <Text
+                                        id="idtextre"
                                         text=" "
                                         class="statusBox greenBackground sapUiTinyMarginEnd"
                                     />
@@ -389,6 +390,7 @@
                                         class="sapUiTinyMarginEnd"
                                     />
                                     <Text
+                                        id="idtextmnk"
                                         text=" "
                                         class="statusBox redBackground sapUiTinyMarginEnd"
                                     />
@@ -407,6 +409,7 @@
                                         class="sapUiTinyMarginEnd"
                                     />
                                     <Text
+                                        id="idtgbuhs"
                                         text=" "
                                         class="statusBox yellowBackground sapUiTinyMarginEnd"
                                     />
@@ -416,6 +419,12 @@
                                     />
                                 </HBox>
                             </HBox>
+                            <VBox
+                                id="vehicleDetailsContainer"
+                                width="100%"
+                                class="vehicleDetailsContainer"
+                                visible="false"
+                            />
                             <HBox
                                 id="parkingLotContainer"
                                 wrap="Wrap"
